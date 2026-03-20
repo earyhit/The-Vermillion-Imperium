@@ -1,15 +1,14 @@
 <!doctype html>
 <html lang="en" class="h-full">
  <head>
-<meta name="google-site-verification" content="6hMYfx5NqojDfjXhxKzpA4agKx81NHVdfq0z_PeVaJo" />  
+  <meta name="google-site-verification" content="6hMYfx5NqojDfjXhxKzpA4agKx81NHVdfq0z_PeVaJo" />  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Vermilion Imperium</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&amp;family=Raleway:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
   <style>
-    html, body { height: 100%; margin: 0; }
+    html, body { height: 100%; margin: 0; scroll-behavior: smooth; }
     * { box-sizing: border-box; }
 
     .app-root {
@@ -17,28 +16,20 @@
       height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
+      perspective: 1000px; /* For 3D effects */
+    }
+
+    /* Glow Effect for the Sigil */
+    #sigilCenter {
+      box-shadow: 0 0 20px rgba(185, 28, 28, 0.2);
+      transition: transform 0.1s ease-out;
     }
 
     @keyframes float-ember {
       0%, 100% { transform: translateY(0) scale(1); opacity: 0; }
       10% { opacity: 1; }
       90% { opacity: 0.6; }
-      100% { transform: translateY(-100%) scale(0.3); opacity: 0; }
-    }
-
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(185, 28, 28, 0.3); }
-      50% { box-shadow: 0 0 40px rgba(185, 28, 28, 0.6), 0 0 80px rgba(185, 28, 28, 0.2); }
-    }
-
-    @keyframes sigil-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+      100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
     }
 
     .ember {
@@ -50,296 +41,166 @@
       pointer-events: none;
     }
 
+    /* Interactive Buttons */
     .cta-btn {
-      animation: pulse-glow 3s ease-in-out infinite;
-      transition: all 0.3s ease;
-    }
-    .cta-btn:hover {
-      transform: translateY(-2px) scale(1.03);
-    }
-
-    .sigil-ring {
-      animation: sigil-spin 30s linear infinite;
-    }
-
-    .fade-up {
-      animation: fade-up 0.8s ease-out both;
-    }
-    .fade-up-d1 { animation-delay: 0.1s; }
-    .fade-up-d2 { animation-delay: 0.25s; }
-    .fade-up-d3 { animation-delay: 0.4s; }
-    .fade-up-d4 { animation-delay: 0.55s; }
-    .fade-up-d5 { animation-delay: 0.7s; }
-    .fade-up-d6 { animation-delay: 0.85s; }
-
-    .feature-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
       overflow: hidden;
     }
-    .feature-card::before {
+    
+    .cta-btn::after {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      transition: opacity 0.3s ease;
-      opacity: 0.5;
+      top: 50%; left: 50%;
+      width: 300%; height: 300%;
+      background: rgba(255,255,255,0.1);
+      transform: translate(-50%, -50%) rotate(45deg) translateY(100%);
+      transition: transform 0.6s;
     }
-    .feature-card:hover {
-      transform: translateY(-6px);
+    .cta-btn:hover::after { transform: translate(-50%, -50%) rotate(45deg) translateY(0); }
+
+    .feature-card {
+      transition: all 0.5s ease;
+      opacity: 0; /* Hidden initially for reveal */
+      transform: translateY(40px);
     }
-    .feature-card:hover::before {
+    
+    .feature-card.is-visible {
       opacity: 1;
+      transform: translateY(0);
     }
 
-    .divider-line {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, currentColor, transparent);
-      opacity: 0.2;
-    }
+    .sigil-ring { animation: sigil-spin 30s linear infinite; }
+    @keyframes sigil-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0708; }
+    ::-webkit-scrollbar-thumb { background: #b91c1c; border-radius: 10px; }
   </style>
-  <style>body { box-sizing: border-box; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full">
   <div class="app-root" id="appRoot" style="background: #0a0708; color: #e8ddd0; font-family: 'Raleway', sans-serif;">
+   
+   <div id="scrollProgress" style="position: fixed; top: 0; left: 0; height: 3px; background: #b91c1c; width: 0%; z-index: 100; transition: width 0.1s;"></div>
+
    <div id="embers" style="position: fixed; inset: 0; pointer-events: none; z-index: 0;"></div>
 
-   <div id="roleModal" style="position: fixed; inset: 0; background: rgba(10, 7, 8, 0.9); display: none; z-index: 50; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div style="background: #16110f; border: 2px solid #b91c1c; border-radius: 12px; padding: 2.5rem; max-width: 500px; width: 90%; text-align: center; animation: fade-up 0.5s ease-out;">
-     <h2 id="roleModalTitle" style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.75rem; letter-spacing: 0.1em; color: #e8ddd0; margin-bottom: 1rem;">Choose Your Path</h2>
-     <p style="color: #e8ddd099; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2.5rem;">Will you serve the Imperium as a Soldier or Developer?</p>
+   <div id="roleModal" style="position: fixed; inset: 0; background: rgba(10, 7, 8, 0.95); display: none; z-index: 50; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="background: #16110f; border: 2px solid #b91c1c; border-radius: 12px; padding: 2.5rem; max-width: 500px; width: 90%; text-align: center;">
+     <h2 id="roleModalTitle" style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.75rem; color: #b91c1c; margin-bottom: 1rem;">Choose Your Path</h2>
      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-       <button id="soldierBtn" style="padding: 1.5rem; border: 2px solid #7f1d1d; background: #7f1d1d33; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: 0.1em;">
-         <div style="width: 40px; height: 40px; margin: 0 auto 1rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #b91c1c99;"><i data-lucide="sword" style="width: 24px; height: 24px; color: #e8ddd0;"></i></div>
-         <div id="soldierLabel" style="color: #e8ddd0; font-size: 0.9rem;">Soldier</div>
-         <div style="color: #e8ddd099; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 400; letter-spacing: 0;">Military Operations</div>
+       <button id="soldierBtn" class="cta-btn" style="padding: 1.5rem; border: 2px solid #7f1d1d; background: #7f1d1d33; border-radius: 8px;">
+         <i data-lucide="sword" style="margin: 0 auto 10px;"></i>
+         <div>Soldier</div>
        </button> 
-       <button id="devBtn" style="padding: 1.5rem; border: 2px solid #7f1d1d; background: #7f1d1d33; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: 0.1em;">
-         <div style="width: 40px; height: 40px; margin: 0 auto 1rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #b91c1c99;"><i data-lucide="code" style="width: 24px; height: 24px; color: #e8ddd0;"></i></div>
-         <div id="devLabel" style="color: #e8ddd0; font-size: 0.9rem;">Developer</div>
-         <div style="color: #e8ddd099; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 400; letter-spacing: 0;">Development Work</div>
+       <button id="devBtn" class="cta-btn" style="padding: 1.5rem; border: 2px solid #7f1d1d; background: #7f1d1d33; border-radius: 8px;">
+         <i data-lucide="code" style="margin: 0 auto 10px;"></i>
+         <div>Developer</div>
        </button>
      </div>
-     <button id="closeRoleModal" style="margin-top: 1.5rem; padding: 0.75rem 1.5rem; background: transparent; border: 1px solid #e8ddd0; color: #e8ddd0; border-radius: 6px; cursor: pointer; font-size: 0.85rem; letter-spacing: 0.1em; transition: all 0.3s ease; font-family: 'Cinzel', serif;"> Close </button>
+     <button id="closeRoleModal" style="margin-top: 2rem; opacity: 0.6;">[ Return ]</button>
     </div>
    </div>
 
-   <header style="position: relative; z-index: 1; padding: 5% 5% 4%;">
+   <header id="parallaxScene" style="position: relative; z-index: 1; padding: 8% 5% 5%;">
     <div style="max-width: 900px; margin: 0 auto; text-align: center;">
-     <div class="fade-up fade-up-d1" style="margin-bottom: 2rem; display: inline-block; position: relative;">
-      <svg class="sigil-ring" width="120" height="120" viewbox="0 0 120 120" style="position: absolute; top: -10px; left: -10px;">
-       <circle cx="60" cy="60" r="55" fill="none" stroke-width="1" stroke-dasharray="4 8" opacity="0.3" id="sigilStroke" />
+     <div id="heroSigil" style="margin-bottom: 2rem; display: inline-block; position: relative; transition: transform 0.2s ease-out;">
+      <svg class="sigil-ring" width="140" height="140" viewbox="0 0 120 120">
+       <circle cx="60" cy="60" r="55" fill="none" stroke="#b91c1c" stroke-width="1" stroke-dasharray="4 8" opacity="0.4" />
       </svg>
-      <div id="sigilCenter" style="width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; border: 2px solid;">VI</div>
+      <div id="sigilCenter" style="position: absolute; top: 20px; left: 20px; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; border: 2px solid #b91c1c; background: rgba(185,28,28,0.1);">VI</div>
      </div>
-     <h1 id="mainTitle" class="fade-up fade-up-d2" style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 3rem; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.15; margin-bottom: 0.75rem;">The Vermilion Imperium</h1>
-     <p id="tagline" class="fade-up fade-up-d3" style="font-family: 'Cinzel', serif; font-weight: 400; font-size: 1.1rem; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.7; margin-bottom: 2rem;">Forged in Fire. Bound by Legacy.</p>
-     <div class="divider-line fade-up fade-up-d3" style="max-width: 300px; margin: 0 auto 2rem;"></div>
-     <p id="heroDesc" class="fade-up fade-up-d4" style="font-size: 1.1rem; line-height: 1.8; max-width: 620px; margin: 0 auto 2.5rem; opacity: 0.85; font-weight: 300;">Step into a thriving community of gamers, creators, and strategists. The Vermilion Imperium is more than a server — it's a brotherhood forged through shared victories and unforgettable moments.</p>
-     <a id="heroJoinBtn" href="https://discord.gg/pw3cGrNrS" target="_blank" rel="noopener noreferrer" class="cta-btn fade-up fade-up-d5" style="display: inline-flex; align-items: center; gap: 10px; padding: 16px 40px; border-radius: 6px; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer;">
-      <svg width="22" height="22" viewbox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" /></svg>
-      <span id="joinBtnText">Join the Imperium</span> 
-     </a>
+     <h1 id="mainTitle" style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 4rem; letter-spacing: 0.15em; text-transform: uppercase;">The Vermilion Imperium</h1>
+     <p style="font-family: 'Cinzel', serif; opacity: 0.6; letter-spacing: 0.4em; margin-bottom: 3rem;">ESTABLISHED MMXXIV</p>
+     <a id="heroJoinBtn" href="#" class="cta-btn" style="background: #b91c1c; color: white; padding: 18px 45px; border-radius: 4px; font-family: 'Cinzel', serif; font-weight: 700; text-decoration: none; display: inline-block;">PLEDGE ALLEGIANCE</a>
     </div>
    </header>
 
-   <section style="position: relative; z-index: 1; padding: 4% 5%;">
-    <div style="max-width: 1000px; margin: 0 auto;">
-     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
-      <div class="feature-card fade-up fade-up-d3" id="card1" style="padding: 2rem 1.5rem; border-radius: 10px;">
-       <div id="card1Icon" style="width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i data-lucide="users" style="width: 24px; height: 24px;"></i></div>
-       <h3 id="f1Title" style="font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem;">Active Community</h3>
-       <p id="f1Desc" style="font-size: 0.9rem; line-height: 1.6; opacity: 0.7; font-weight: 300;">Hundreds of members online daily. Jump into conversations, make friends, and find your place in the Imperium.</p>
+   <section style="padding: 10% 5%;">
+    <div style="max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+      <div class="feature-card" style="background: #16110f; padding: 3rem 2rem; border-left: 3px solid #b91c1c;">
+        <i data-lucide="shield-check" class="mb-4 text-red-700"></i>
+        <h3 class="font-cinzel text-xl mb-2">High Command</h3>
+        <p class="opacity-60 text-sm">Organized leadership dedicated to server growth and member protection.</p>
       </div>
-      <div class="feature-card fade-up fade-up-d4" id="card2" style="padding: 2rem 1.5rem; border-radius: 10px;">
-       <div id="card2Icon" style="width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i data-lucide="calendar" style="width: 24px; height: 24px;"></i></div>
-       <h3 id="f2Title" style="font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem;">Epic Events</h3>
-       <p id="f2Desc" style="font-size: 0.9rem; line-height: 1.6; opacity: 0.7; font-weight: 300;">Weekly tournaments, movie nights, game jams, and community challenges with prizes and bragging rights.</p>
+      <div class="feature-card" style="background: #16110f; padding: 3rem 2rem; border-left: 3px solid #b91c1c;">
+        <i data-lucide="zap" class="mb-4 text-red-700"></i>
+        <h3 class="font-cinzel text-xl mb-2">Instant Action</h3>
+        <p class="opacity-60 text-sm">Active voice channels and matchmaking for Minecraft, FPS, and more.</p>
       </div>
-      <div class="feature-card fade-up fade-up-d5" id="card3" style="padding: 2rem 1.5rem; border-radius: 10px;">
-       <div id="card3Icon" style="width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i data-lucide="shield" style="width: 24px; height: 24px;"></i></div>
-       <h3 id="f3Title" style="font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem;">Exclusive Roles</h3>
-       <p id="f3Desc" style="font-size: 0.9rem; line-height: 1.6; opacity: 0.7; font-weight: 300;">Rise through the ranks. Earn custom titles, unlock secret channels, and prove your loyalty to the Imperium.</p>
+      <div class="feature-card" style="background: #16110f; padding: 3rem 2rem; border-left: 3px solid #b91c1c;">
+        <i data-lucide="trophy" class="mb-4 text-red-700"></i>
+        <h3 class="font-cinzel text-xl mb-2">Grand Rewards</h3>
+        <p class="opacity-60 text-sm">Regular giveaways and exclusive ranks for our most loyal citizens.</p>
       </div>
-      <div class="feature-card fade-up fade-up-d6" id="card4" style="padding: 2rem 1.5rem; border-radius: 10px;">
-       <div id="card4Icon" style="width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i data-lucide="gamepad-2" style="width: 24px; height: 24px;"></i></div>
-       <h3 id="f4Title" style="font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem;">Gaming Hub</h3>
-       <p id="f4Desc" style="font-size: 0.9rem; line-height: 1.6; opacity: 0.7; font-weight: 300;">Dedicated channels for every major title. Find squads, share clips, and dominate together as one legion.</p>
-      </div>
-     </div>
     </div>
    </section>
 
-   <section style="position: relative; z-index: 1; padding: 3% 5%;">
-    <div style="max-width: 800px; margin: 0 auto;">
-     <div class="divider-line" style="margin-bottom: 2rem;"></div>
-     <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; text-align: center;">
-      <div class="fade-up fade-up-d3">
-       <div style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 2rem; color: #b91c1c;" id="stat1Num">500+</div>
-       <div style="font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; margin-top: 0.25rem;">Members</div>
-      </div>
-      <div class="fade-up fade-up-d4">
-       <div style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 2rem; color: #b91c1c;" id="stat2Num">50+</div>
-       <div style="font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; margin-top: 0.25rem;">Channels</div>
-      </div>
-      <div class="fade-up fade-up-d5">
-       <div style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 2rem; color: #b91c1c;" id="stat3Num">24/7</div>
-       <div style="font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; margin-top: 0.25rem;">Activity</div>
-      </div>
-     </div>
-     <div class="divider-line" style="margin-top: 2rem;"></div>
-    </div>
-   </section>
-
-   <section style="position: relative; z-index: 1; padding: 4% 5% 6%; text-align: center;">
-    <div style="max-width: 650px; margin: 0 auto;">
-     <h2 id="ctaHeading" class="fade-up fade-up-d2" style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 2rem; letter-spacing: 0.08em; margin-bottom: 1rem;">The Imperium Awaits</h2>
-     <p id="ctaDesc" class="fade-up fade-up-d3" style="font-size: 1.05rem; line-height: 1.7; opacity: 0.75; font-weight: 300; margin-bottom: 2rem;">Your next chapter begins here. Join thousands who have already pledged allegiance. One click — and you're in.</p>
-     <a id="ctaJoinBtn" href="https://discord.gg/pw3cGrNrS" target="_blank" rel="noopener noreferrer" class="cta-btn fade-up fade-up-d4" style="display: inline-flex; align-items: center; gap: 10px; padding: 16px 44px; border-radius: 6px; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; cursor: pointer; background: #b91c1c; color: #e8ddd0;">
-      <svg width="20" height="20" viewbox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" /></svg>
-      <span id="ctaBtnText">Join the Imperium</span> 
-     </a>
-     <p style="margin-top: 2.5rem; font-size: 0.75rem; opacity: 0.3; letter-spacing: 0.1em; text-transform: uppercase;">Est. MMXXIV — Glory to the Imperium</p>
-    </div>
-   </section>
+   <footer style="text-align: center; padding: 50px; opacity: 0.4; font-size: 0.8rem;">
+    &copy; 2026 THE VERMILION IMPERIUM. ALL RIGHTS RESERVED.
+   </footer>
   </div>
 
   <script>
-    const defaultConfig = {
-      background_color: '#0a0708',
-      surface_color: '#16110f',
-      text_color: '#e8ddd0',
-      primary_action_color: '#b91c1c',
-      secondary_action_color: '#7f1d1d',
-      font_family: 'Raleway',
-      font_size: 16,
-      main_title: 'The Vermilion Imperium',
-      tagline: 'Forged in Fire. Bound by Legacy.',
-      hero_description: 'Step into a thriving community of gamers, creators, and strategists. The Vermilion Imperium is more than a server — it\'s a brotherhood forged through shared victories and unforgettable moments.',
-      join_button_text: 'Join the Imperium',
-      feature_1_title: 'Active Community',
-      feature_1_desc: 'Hundreds of members online daily. Jump into conversations, make friends, and find your place in the Imperium.',
-      feature_2_title: 'Epic Events',
-      feature_2_desc: 'Weekly tournaments, movie nights, game jams, and community challenges with prizes and bragging rights.',
-      feature_3_title: 'Exclusive Roles',
-      feature_3_desc: 'Rise through the ranks. Earn custom titles, unlock secret channels, and prove your loyalty to the Imperium.',
-      feature_4_title: 'Gaming Hub',
-      feature_4_desc: 'Dedicated channels for every major title. Find squads, share clips, and dominate together as one legion.',
-      cta_heading: 'The Imperium Awaits',
-      cta_description: 'Your next chapter begins here. Join thousands who have already pledged allegiance. One click — and you\'re in.',
-      discord_invite_url: 'https://discord.gg/pw3cGrNrS',
-      role_modal_title: 'Choose Your Path',
-      soldier_role_text: 'Soldier',
-      dev_role_text: 'Developer'
-    };
-
-    function applyConfig(config) {
-      const bg = config.background_color || defaultConfig.background_color;
-      const surface = config.surface_color || defaultConfig.surface_color;
-      const text = config.text_color || defaultConfig.text_color;
-      const primary = config.primary_action_color || defaultConfig.primary_action_color;
-      const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
-      const fontFamily = config.font_family || defaultConfig.font_family;
-      const baseSize = config.font_size || defaultConfig.font_size;
-
-      const root = document.getElementById('appRoot');
-      root.style.background = bg;
-      root.style.color = text;
-      root.style.fontFamily = `${fontFamily}, 'Raleway', sans-serif`;
-
-      const sigilCenter = document.getElementById('sigilCenter');
-      sigilCenter.style.background = `radial-gradient(circle, ${secondary}, ${bg})`;
-      sigilCenter.style.borderColor = primary;
-      sigilCenter.style.color = primary;
-      document.getElementById('sigilStroke').setAttribute('stroke', primary);
-
-      const el = (id) => document.getElementById(id);
-      el('mainTitle').textContent = config.main_title || defaultConfig.main_title;
-      el('mainTitle').style.fontSize = `${baseSize * 3 / 16}rem`;
-      el('tagline').textContent = config.tagline || defaultConfig.tagline;
-      el('heroDesc').textContent = config.hero_description || defaultConfig.hero_description;
-
-      const btnText = config.join_button_text || defaultConfig.join_button_text;
-      el('joinBtnText').textContent = btnText;
-      el('ctaBtnText').textContent = btnText;
-
-      const cards = [el('card1'), el('card2'), el('card3'), el('card4')];
-      const icons = [el('card1Icon'), el('card2Icon'), el('card3Icon'), el('card4Icon')];
-      
-      let dynStyle = document.getElementById('dynStyle');
-      if (!dynStyle) {
-        dynStyle = document.createElement('style');
-        dynStyle.id = 'dynStyle';
-        document.head.appendChild(dynStyle);
-      }
-      dynStyle.textContent = `
-        .feature-card { background: ${surface} !important; }
-        .feature-card::before { background: linear-gradient(90deg, transparent, ${primary}, transparent) !important; }
-        .feature-card:hover { box-shadow: 0 8px 30px ${primary}22 !important; }
-        .cta-btn { background: ${primary} !important; color: ${text} !important; }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px ${primary}55; }
-          50% { box-shadow: 0 0 40px ${primary}99, 0 0 80px ${primary}33; }
-        }
-      `;
-
-      icons.forEach(ic => {
-        ic.style.background = `${primary}22`;
-        ic.style.color = primary;
-      });
-
-      el('f1Title').textContent = config.feature_1_title || defaultConfig.feature_1_title;
-      el('f2Title').textContent = config.feature_2_title || defaultConfig.feature_2_title;
-      el('f3Title').textContent = config.feature_3_title || defaultConfig.feature_3_title;
-      el('f4Title').textContent = config.feature_4_title || defaultConfig.feature_4_title;
-
-      ['stat1Num','stat2Num','stat3Num'].forEach(id => { el(id).style.color = primary; });
-
-      el('ctaHeading').textContent = config.cta_heading || defaultConfig.cta_heading;
-      el('roleModalTitle').style.color = primary;
-    }
-
+    // 1. Create Embers
     function createEmbers() {
       const container = document.getElementById('embers');
-      const colors = ['#b91c1c', '#dc2626', '#f87171', '#ff6b35'];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 30; i++) {
         const ember = document.createElement('div');
         ember.className = 'ember';
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        ember.style.background = color;
-        ember.style.boxShadow = `0 0 6px ${color}`;
+        ember.style.background = `#b91c1c`;
         ember.style.left = Math.random() * 100 + '%';
-        ember.style.bottom = '-5%';
-        ember.style.animationDuration = (6 + Math.random() * 10) + 's';
-        ember.style.animationDelay = (Math.random() * 8) + 's';
+        ember.style.bottom = '-10%';
+        ember.style.animationDuration = (5 + Math.random() * 7) + 's';
+        ember.style.animationDelay = Math.random() * 5 + 's';
+        ember.style.opacity = Math.random();
         container.appendChild(ember);
       }
     }
 
-    // Role selection triggers
-    [document.getElementById('heroJoinBtn'), document.getElementById('ctaJoinBtn')].forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        document.getElementById('roleModal').style.display = 'flex';
-      };
+    // 2. Parallax Effect
+    document.addEventListener('mousemove', (e) => {
+      const moveX = (e.clientX - window.innerWidth / 2) / 50;
+      const moveY = (e.clientY - window.innerHeight / 2) / 50;
+      
+      document.getElementById('heroSigil').style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+      document.getElementById('mainTitle').style.transform = `translate3d(${-moveX * 0.5}px, ${-moveY * 0.5}px, 0)`;
     });
 
-    document.getElementById('soldierBtn').addEventListener('click', () => {
-      window.open('https://discord.gg/pw3cGrNrS', '_blank');
-      document.getElementById('roleModal').style.display = 'none';
-    });
+    // 3. Scroll Reveal Logic
+    const observerOptions = { threshold: 0.2 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, observerOptions);
 
-    document.getElementById('devBtn').addEventListener('click', () => {
-      window.open('https://discord.gg/pw3cGrNrS', '_blank');
-      document.getElementById('roleModal').style.display = 'none';
-    });
+    document.querySelectorAll('.feature-card').forEach(card => observer.observe(card));
 
-    document.getElementById('closeRoleModal').addEventListener('click', () => {
-      document.getElementById('roleModal').style.display = 'none';
-    });
+    // 4. Scroll Progress Bar
+    const root = document.getElementById('appRoot');
+    root.onscroll = () => {
+      const winScroll = root.scrollTop;
+      const height = root.scrollHeight - root.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById("scrollProgress").style.width = scrolled + "%";
+    };
 
-    applyConfig(defaultConfig);
+    // 5. Modal Logic
+    const modal = document.getElementById('roleModal');
+    document.getElementById('heroJoinBtn').onclick = (e) => {
+      e.preventDefault();
+      modal.style.display = 'flex';
+    };
+
+    document.getElementById('closeRoleModal').onclick = () => modal.style.display = 'none';
+
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
+
+    // Final Setup
     createEmbers();
     lucide.createIcons();
   </script>
